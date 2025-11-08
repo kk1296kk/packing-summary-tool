@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Packing Summary Tool</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'San Francisco', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background-color: #f6f6f7;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.05);
+        }
+        
+        .header h1 {
+            margin: 0 0 8px 0;
+            font-size: 24px;
+            font-weight: 600;
+            color: #202223;
+        }
+        
+        .header p {
+            margin: 0;
+            color: #6d7175;
+            font-size: 14px;
+        }
+        
+        .stats-bar {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            flex: 1;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.05);
+        }
+        
+        .stat-label {
+            font-size: 13px;
+            color: #6d7175;
+            margin-bottom: 4px;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: 600;
+            color: #202223;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #008060;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #006e52;
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: #202223;
+            border: 1px solid #c9cccf;
+        }
+        
+        .btn-secondary:hover {
+            background: #f6f6f7;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.05);
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e1e3e5;
+            border-top-color: #008060;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .error-banner {
+            background: #fef1f0;
+            border: 1px solid #fed3d1;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+            color: #d72c0d;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.05);
+        }
+        
+        .empty-state h2 {
+            margin: 16px 0 8px;
+            font-size: 20px;
+            color: #202223;
+        }
+        
+        .empty-state p {
+            color: #6d7175;
+            margin: 0;
+        }
+        
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        thead {
+            background: #f6f6f7;
+            border-bottom: 1px solid #e1e3e5;
+        }
+        
+        th {
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 600;
+            color: #202223;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+        
+        td {
+            padding: 16px;
+            border-bottom: 1px solid #e1e3e5;
+            color: #202223;
+            font-size: 14px;
+        }
+        
+        tbody tr:hover {
+            background: #f6f6f7;
+        }
+        
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        /* Checkbox styling */
+        .checkbox-cell {
+            width: 60px;
+            text-align: center;
+        }
+        
+        .custom-checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #c9cccf;
+            border-radius: 50%;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            background: white;
+        }
+        
+        .custom-checkbox:hover {
+            border-color: #008060;
+        }
+        
+        .custom-checkbox.checked {
+            background: #008060;
+            border-color: #008060;
+        }
+        
+        .custom-checkbox.checked::after {
+            content: '✓';
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        .quantity-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #008060;
+            color: white;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .quantity-high {
+            background: #d82c0d;
+        }
+        
+        .quantity-medium {
+            background: #ff8c00;
+        }
+        
+        .quantity-low {
+            background: #008060;
+        }
+        
+        /* Bundle styling */
+        .bundle-row {
+            background: #fff9e6 !important;
+        }
+        
+        .bundle-indicator {
+            display: inline-block;
+            padding: 2px 8px;
+            background: #ffc107;
+            color: #664d03;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+            text-transform: uppercase;
+        }
+        
+        .expand-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 0 8px;
+            color: #6d7175;
+            transition: transform 0.2s;
+        }
+        
+        .expand-button.expanded {
+            transform: rotate(90deg);
+        }
+        
+        .bundle-items {
+            display: none;
+            background: #fffbf0;
+            padding: 12px 16px 12px 80px;
+            border-bottom: 1px solid #e1e3e5;
+        }
+        
+        .bundle-items.show {
+            display: block;
+        }
+        
+        .bundle-item {
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #6d7175;
+        }
+        
+        .bundle-item-quantity {
+            font-weight: 600;
+            color: #202223;
+            min-width: 30px;
+        }
+        
+        .timestamp {
+            text-align: center;
+            color: #6d7175;
+            font-size: 13px;
+            margin-top: 16px;
+        }
+        
+        @media print {
+            .actions, .btn {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>📦 Packing Summary Tool</h1>
+            <p>Check off items as you pack them</p>
+        </div>
+        
+        <!-- Stats Bar -->
+        <div class="stats-bar" id="stats-bar" style="display: none;">
+            <div class="stat-card">
+                <div class="stat-label">Total Orders</div>
+                <div class="stat-value" id="total-orders">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Unique Items</div>
+                <div class="stat-value" id="unique-items">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Items to Pack</div>
+                <div class="stat-value" id="total-items">0</div>
+            </div>
+        </div>
+        
+        <!-- Actions -->
+        <div class="actions">
+            <button class="btn btn-primary" id="refresh-btn" onclick="loadPackingSummary()">
+                🔄 Refresh Data
+            </button>
+            <button class="btn btn-secondary" onclick="window.print()">
+                🖨️ Print List
+            </button>
+        </div>
+        
+        <!-- Error Message -->
+        <div id="error-message" style="display: none;"></div>
+        
+        <!-- Loading State -->
+        <div class="loading" id="loading">
+            <div class="loading-spinner"></div>
+            <p>Loading packing summary...</p>
+        </div>
+        
+        <!-- Empty State -->
+        <div class="empty-state" id="empty-state" style="display: none;">
+            <div style="font-size: 48px; margin-bottom: 16px;">🎉</div>
+            <h2>All Orders Fulfilled!</h2>
+            <p>There are no unfulfilled orders at this time.</p>
+        </div>
+        
+        <!-- Results Table -->
+        <div class="table-container" id="results-table" style="display: none;">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="checkbox-cell"></th>
+                        <th>Item Name</th>
+                        <th style="width: 150px; text-align: center;">Quantity Needed</th>
+                    </tr>
+                </thead>
+                <tbody id="items-tbody">
+                    <!-- Items will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Timestamp -->
+        <div class="timestamp" id="timestamp" style="display: none;"></div>
+    </div>
+
+    <script>
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadPackingSummary();
+        });
+
+        function toggleCheckbox(element) {
+            element.classList.toggle('checked');
+        }
+
+        function toggleBundle(itemId) {
+            const bundleItems = document.getElementById(`bundle-${itemId}`);
+            const expandBtn = document.getElementById(`expand-${itemId}`);
+            
+            bundleItems.classList.toggle('show');
+            expandBtn.classList.toggle('expanded');
+        }
+
+        async function loadPackingSummary() {
+            const loading = document.getElementById('loading');
+            const resultsTable = document.getElementById('results-table');
+            const emptyState = document.getElementById('empty-state');
+            const statsBar = document.getElementById('stats-bar');
+            const errorMessage = document.getElementById('error-message');
+            const refreshBtn = document.getElementById('refresh-btn');
+            const timestamp = document.getElementById('timestamp');
+            
+            loading.style.display = 'block';
+            resultsTable.style.display = 'none';
+            emptyState.style.display = 'none';
+            statsBar.style.display = 'none';
+            errorMessage.style.display = 'none';
+            timestamp.style.display = 'none';
+            refreshBtn.disabled = true;
+            
+            try {
+                const response = await fetch('/api/packing-summary');
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to load data');
+                }
+                
+                loading.style.display = 'none';
+                
+                if (data.items.length === 0) {
+                    emptyState.style.display = 'block';
+                } else {
+                    displayResults(data);
+                }
+                
+                refreshBtn.disabled = false;
+                
+            } catch (error) {
+                console.error('Error:', error);
+                loading.style.display = 'none';
+                errorMessage.className = 'error-banner';
+                errorMessage.innerHTML = `<strong>Error:</strong> ${error.message}`;
+                errorMessage.style.display = 'block';
+                refreshBtn.disabled = false;
+            }
+        }
+
+        function displayResults(data) {
+            const tbody = document.getElementById('items-tbody');
+            const resultsTable = document.getElementById('results-table');
+            const statsBar = document.getElementById('stats-bar');
+            const timestamp = document.getElementById('timestamp');
+            
+            // Update stats
+            document.getElementById('total-orders').textContent = data.totalOrders;
+            document.getElementById('unique-items').textContent = data.items.length;
+            document.getElementById('total-items').textContent = 
+                data.items.reduce((sum, item) => sum + item.quantity, 0);
+            
+            // Display items
+            tbody.innerHTML = data.items.map((item, index) => {
+                const itemId = `item-${index}`;
+                
+                // Determine quantity badge color
+                let quantityClass = 'quantity-low';
+                if (item.quantity >= 10) {
+                    quantityClass = 'quantity-high';
+                } else if (item.quantity >= 5) {
+                    quantityClass = 'quantity-medium';
+                }
+                
+                let html = `
+                    <tr class="${item.isBundle ? 'bundle-row' : ''}">
+                        <td class="checkbox-cell">
+                            <div class="custom-checkbox" onclick="toggleCheckbox(this)"></div>
+                        </td>
+                        <td>
+                            ${item.isBundle ? `<button class="expand-button" id="expand-${itemId}" onclick="toggleBundle('${itemId}')">▶</button>` : ''}
+                            <strong>${item.name}</strong>
+                            ${item.isBundle ? `<span class="bundle-indicator">Bundle</span>` : ''}
+                        </td>
+                        <td style="text-align: center;">
+                            <span class="quantity-badge ${quantityClass}">${item.quantity}</span>
+                        </td>
+                    </tr>
+                `;
+                
+                // Add bundle items if this is a bundle
+                if (item.isBundle) {
+                    html += `
+                        <tr>
+                            <td colspan="3" style="padding: 0;">
+                                <div class="bundle-items" id="bundle-${itemId}">
+                                    ${item.items.map(bundleItem => `
+                                        <div class="bundle-item">
+                                            <div class="custom-checkbox" onclick="toggleCheckbox(this)"></div>
+                                            <span class="bundle-item-quantity">×${item.quantity}</span>
+                                            <span>${bundleItem}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }
+                
+                return html;
+            }).join('');
+            
+            // Show results
+            resultsTable.style.display = 'block';
+            statsBar.style.display = 'flex';
+            
+            // Update timestamp
+            const date = new Date(data.generatedAt);
+            timestamp.textContent = `Last updated: ${date.toLocaleString()}`;
+            timestamp.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
