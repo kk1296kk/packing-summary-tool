@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Packing Summary Tool</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'San Francisco', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background-color: #f6f6f7;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.05);
+        }
+        
+        .header h1 {
+            margin: 0 0 8px 0;
+            font-size: 24px;
+            font-weight: 600;
+            color: #202223;
+        }
+        
+        .header p {
+            margin: 0;
+            color: #6d7175;
+            font-size: 14px;
+        }
+
+        /* View Toggle */
+        .view-toggle {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.05);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .view-toggle-label {
+            font-weight: 600;
+            color: #202223;
+            margin-right: 8px;
+        }
+
+        .toggle-btn {
+            padding: 10px 20px;
+            border: 2px solid #c9cccf;
+            background: white;
+            color: #202223;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .toggle-btn.active {
+            background: #008060;
+            color: white;
+            border-color: #008060;
+        }
+
+        .toggle-btn:hover:not(.active) {
+            background: #f6f6f7;
+        }
+        
+        .stats-bar {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            flex: 1;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.05);
+        }
+        
+        .stat-label {
+            font-size: 13px;
+            color: #6d7175;
+            margin-bottom: 4px;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: 600;
+            color: #202223;
+        }
+
+        /* Search Bar */
+        .search-bar {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.05);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #c9cccf;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #008060;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #008060;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #006e52;
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: #202223;
+            border: 1px solid #c9cccf;
+        }
+        
+        .btn-secondary:hover {
+            background: #f6f6f7;
+        }
+
+        .btn-sendle {
+            background: #ff4d00;
+            color: white;
+        }
+
+        .btn-sendle:hover {
+            background: #e64500;
+        }
+
+        .btn-auspost {
+            background: #dc143c;
+            color: white;
+        }
+
+        .btn-auspost:hover {
+            background: #c41236;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.05);
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e1e3e5;
+            border-top-color: #008060;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .error-banner {
+            background: #fef1f0;
+            border: 1px solid #fed3d1;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+            color: #d72c0d;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.05);
+        }
+        
+        .empty-state h2 {
+            margin: 16px 0 8px;
+            font-size: 20px;
+            color: #202223;
+        }
+        
+        .empty-state p {
+            color: #6d7175;
+            margin: 0;
+        }
+        
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        thead {
+            background: #f6f6f7;
+            border-bottom: 1px solid #e1e3e5;
+        }
+        
+        th {
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 600;
+            color: #202223;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+        
+        td {
+            padding: 16px;
+            border-bottom: 1px solid #e1e3e5;
+            color: #202223;
+            font-size: 14px;
+        }
+        
+        tbody tr:hover {
+            background: #f6f6f7;
+        }
+        
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .row-hidden {
+            display: none;
+        }
+        
+        .checkbox-cell {
+            width: 60px;
+            text-align: center;
+        }
+        
+        .custom-checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #c9cccf;
+            border-radius: 50%;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            background: white;
+        }
+        
+        .custom-checkbox:hover {
+            border-color: #008060;
+        }
+        
+        .custom-checkbox.checked {
+            background: #008060;
+            border-color: #008060;
+        }
+        
+        .custom-checkbox.checked::after {
+            content: '✓';
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        .quantity-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #008060;
+            color: white;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .quantity-high {
+            background: #d82c0d;
+        }
+        
+        .quantity-medium {
+            background: #ff8c00;
+        }
+        
+        .quantity-low {
+            background: #008060;
+        }
+
+        /* Express Badge */
+        .express-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            background: #d82c0d;
+            color: white;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-left: 8px;
+            text-transform: uppercase;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .express-row {
+            background: #fff5f5 !important;
+            border-left: 4px solid #d82c0d !important;
+        }
+        
+        .bundle-row {
+            background: #fff9e6 !important;
+        }
+        
+        .bundle-indicator {
+            display: inline-block;
+            padding: 2px 8px;
+            background: #ffc107;
+            color: #664d03;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+            text-transform: uppercase;
+        }
+        
+        .expand-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 0 8px;
+            color: #6d7175;
+            transition: transform 0.2s;
+        }
+        
+        .expand-button.expanded {
+            transform: rotate(90deg);
+        }
+        
+        .bundle-items {
+            display: none;
+            background: #fffbf0;
+            padding: 12px 16px 12px 80px;
+            border-bottom: 1px solid #e1e3e5;
+        }
+        
+        .bundle-items.show {
+            display: block;
+        }
+        
+        .bundle-item {
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #6d7175;
+        }
+        
+        .bundle-item-quantity {
+            font-weight: 600;
+            color: #202223;
+            min-width: 30px;
+        }
+
+        /* Order Details */
+        .order-details {
+            font-size: 12px;
+            color: #6d7175;
+            margin-top: 4px;
+        }
+
+        .customer-name {
+            color: #008060;
+            font-weight: 500;
+        }
+
+        /* Orders View Specific */
+        .order-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.05);
+            border-left: 4px solid #c9cccf;
+        }
+
+        .order-card.express {
+            border-left-color: #d82c0d;
+            background: #fff5f5;
+        }
+
+        .order-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #e1e3e5;
+        }
+
+        .order-info h3 {
+            font-size: 18px;
+            color: #202223;
+            margin-bottom: 4px;
+        }
+
+        .order-meta {
+            font-size: 13px;
+            color: #6d7175;
+        }
+
+        .order-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .order-items-list {
+            margin: 16px 0;
+        }
+
+        .order-item {
+            padding: 12px;
+            background: #f6f6f7;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .order-item-name {
+            flex: 1;
+            font-weight: 500;
+        }
+
+        .order-item-qty {
+            font-weight: 600;
+            color: #008060;
+        }
+
+        .shipping-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        
+        .timestamp {
+            text-align: center;
+            color: #6d7175;
+            font-size: 13px;
+            margin-top: 16px;
+        }
+        
+        @media print {
+            .actions, .btn, .view-toggle, .search-bar {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>📦 Packing Summary Tool</h1>
+            <p>Check off items as you pack them</p>
+        </div>
+
+        <!-- View Toggle -->
+        <div class="view-toggle">
+            <span class="view-toggle-label">View Mode:</span>
+            <button class="toggle-btn active" onclick="switchView('items')">📋 Pack by Item</button>
+            <button class="toggle-btn" onclick="switchView('orders')">📦 Assembly by Order</button>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-bar">
+            <input 
+                type="text" 
+                class="search-input" 
+                id="search-input" 
+                placeholder="Search by order number or customer name..."
+                onkeyup="performSearch()"
+            >
+        </div>
+        
+        <!-- Stats Bar -->
+        <div class="stats-bar" id="stats-bar" style="display: none;">
+            <div class="stat-card">
+                <div class="stat-label">Total Orders</div>
+                <div class="stat-value" id="total-orders">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Unique Items</div>
+                <div class="stat-value" id="unique-items">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Items to Pack</div>
+                <div class="stat-value" id="total-items">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Express Orders</div>
+                <div class="stat-value" id="express-orders" style="color: #d82c0d;">0</div>
+            </div>
+        </div>
+        
+        <!-- Actions -->
+        <div class="actions">
+            <button class="btn btn-primary" id="refresh-btn" onclick="loadCurrentView()">
+                🔄 Refresh Data
+            </button>
+            <button class="btn btn-secondary" onclick="window.print()">
+                🖨️ Print List
+            </button>
+        </div>
+        
+        <!-- Error Message -->
+        <div id="error-message" style="display: none;"></div>
+        
+        <!-- Loading State -->
+        <div class="loading" id="loading">
+            <div class="loading-spinner"></div>
+            <p>Loading packing summary...</p>
+        </div>
+        
+        <!-- Empty State -->
+        <div class="empty-state" id="empty-state" style="display: none;">
+            <div style="font-size: 48px; margin-bottom: 16px;">🎉</div>
+            <h2>All Orders Fulfilled!</h2>
+            <p>There are no unfulfilled orders at this time.</p>
+        </div>
+        
+        <!-- Items View (Pack by Item) -->
+        <div id="items-view" style="display: none;">
+            <div class="table-container" id="results-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="checkbox-cell"></th>
+                            <th>Item Name</th>
+                            <th style="width: 200px;">Orders / Customers</th>
+                            <th style="width: 150px; text-align: center;">Quantity</th>
+                        </tr>
+                    </thead>
+                    <tbody id="items-tbody">
+                        <!-- Items will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Orders View (Assembly by Order) -->
+        <div id="orders-view" style="display: none;">
+            <div id="orders-container">
+                <!-- Order cards will be inserted here -->
+            </div>
+        </div>
+        
+        <!-- Timestamp -->
+        <div class="timestamp" id="timestamp" style="display: none;"></div>
+    </div>
+
+    <script>
+        let currentView = 'items';
+        let currentData = null;
+
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCurrentView();
+        });
+
+        function switchView(view) {
+            currentView = view;
+            
+            // Update toggle buttons
+            document.querySelectorAll('.toggle-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Clear search
+            document.getElementById('search-input').value = '';
+            
+            // Load appropriate view
+            loadCurrentView();
+        }
+
+        function loadCurrentView() {
+            if (currentView === 'items') {
+                loadPackingSummary();
+            } else {
+                loadOrdersView();
+            }
+        }
+
+        function toggleCheckbox(element) {
+            element.classList.toggle('checked');
+        }
+
+        function toggleBundle(itemId) {
+            const bundleItems = document.getElementById(`bundle-${itemId}`);
+            const expandBtn = document.getElementById(`expand-${itemId}`);
+            
+            bundleItems.classList.toggle('show');
+            expandBtn.classList.toggle('expanded');
+        }
+
+        function performSearch() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            
+            if (currentView === 'items') {
+                searchItemsView(searchTerm);
+            } else {
+                searchOrdersView(searchTerm);
+            }
+        }
+
+        function searchItemsView(searchTerm) {
+            const rows = document.querySelectorAll('#items-tbody tr');
+            
+            rows.forEach(row => {
+                const itemName = row.querySelector('td:nth-child(2)')?.textContent.toLowerCase() || '';
+                const orderDetails = row.querySelector('td:nth-child(3)')?.textContent.toLowerCase() || '';
+                
+                if (itemName.includes(searchTerm) || orderDetails.includes(searchTerm)) {
+                    row.classList.remove('row-hidden');
+                } else {
+                    row.classList.add('row-hidden');
+                }
+            });
+        }
+
+        function searchOrdersView(searchTerm) {
+            const orderCards = document.querySelectorAll('.order-card');
+            
+            orderCards.forEach(card => {
+                const orderText = card.textContent.toLowerCase();
+                
+                if (orderText.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        async function loadPackingSummary() {
+            showLoading();
+            
+            try {
+                const response = await fetch('/api/packing-summary');
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to load data');
+                }
+                
+                currentData = data;
+                hideLoading();
+                
+                if (data.items.length === 0) {
+                    showEmptyState();
+                } else {
+                    displayItemsView(data);
+                }
+                
+                enableRefreshButton();
+                
+            } catch (error) {
+                console.error('Error:', error);
+                hideLoading();
+                showError(error.message);
+                enableRefreshButton();
+            }
+        }
+
+        async function loadOrdersView() {
+            showLoading();
+            
+            try {
+                const response = await fetch('/api/orders-view');
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to load data');
+                }
+                
+                currentData = data;
+                hideLoading();
+                
+                if (data.orders.length === 0) {
+                    showEmptyState();
+                } else {
+                    displayOrdersView(data);
+                }
+                
+                enableRefreshButton();
+                
+            } catch (error) {
+                console.error('Error:', error);
+                hideLoading();
+                showError(error.message);
+                enableRefreshButton();
+            }
+        }
+
+        function displayItemsView(data) {
+            const tbody = document.getElementById('items-tbody');
+            const itemsView = document.getElementById('items-view');
+            const ordersView = document.getElementById('orders-view');
+            const statsBar = document.getElementById('stats-bar');
+            const timestamp = document.getElementById('timestamp');
+            
+            // Show items view, hide orders view
+            itemsView.style.display = 'block';
+            ordersView.style.display = 'none';
+            
+            // Count express orders
+            const expressCount = new Set(
+                data.items.flatMap(item => 
+                    item.orders.filter(o => o.isExpress).map(o => o.orderNumber)
+                )
+            ).size;
+            
+            // Update stats
+            document.getElementById('total-orders').textContent = data.totalOrders;
+            document.getElementById('unique-items').textContent = data.items.length;
+            document.getElementById('total-items').textContent = 
+                data.items.reduce((sum, item) => sum + item.quantity, 0);
+            document.getElementById('express-orders').textContent = expressCount;
+            
+            // Display items
+            tbody.innerHTML = data.items.map((item, index) => {
+                const itemId = `item-${index}`;
+                const hasExpress = item.orders.some(o => o.isExpress);
+                
+                // Determine quantity badge color
+                let quantityClass = 'quantity-low';
+                if (item.quantity >= 10) {
+                    quantityClass = 'quantity-high';
+                } else if (item.quantity >= 5) {
+                    quantityClass = 'quantity-medium';
+                }
+                
+                // Format order details
+                const orderDetails = item.orders.map(o => {
+                    const expressTag = o.isExpress ? ' ⚡' : '';
+                    return `#${o.orderNumber} - ${o.customerName}${expressTag}`;
+                }).join('<br>');
+                
+                let html = `
+                    <tr class="${item.isBundle ? 'bundle-row' : ''} ${hasExpress ? 'express-row' : ''}">
+                        <td class="checkbox-cell">
+                            <div class="custom-checkbox" onclick="toggleCheckbox(this)"></div>
+                        </td>
+                        <td>
+                            ${item.isBundle ? `<button class="expand-button" id="expand-${itemId}" onclick="toggleBundle('${itemId}')">▶</button>` : ''}
+                            <strong>${item.name}</strong>
+                            ${item.isBundle ? `<span class="bundle-indicator">Bundle</span>` : ''}
+                            ${hasExpress ? `<span class="express-badge">Express</span>` : ''}
+                        </td>
+                        <td>
+                            <div class="order-details">${orderDetails}</div>
+                        </td>
+                        <td style="text-align: center;">
+                            <span class="quantity-badge ${quantityClass}">${item.quantity}</span>
+                        </td>
+                    </tr>
+                `;
+                
+                // Add bundle items
+                if (item.isBundle) {
+                    html += `
+                        <tr>
+                            <td colspan="4" style="padding: 0;">
+                                <div class="bundle-items" id="bundle-${itemId}">
+                                    ${item.items.map(bundleItem => `
+                                        <div class="bundle-item">
+                                            <div class="custom-checkbox" onclick="toggleCheckbox(this)"></div>
+                                            <span class="bundle-item-quantity">×${item.quantity}</span>
+                                            <span>${bundleItem}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }
+                
+                return html;
+            }).join('');
+            
+            // Show UI elements
+            statsBar.style.display = 'flex';
+            
+            // Update timestamp
+            const date = new Date(data.generatedAt);
+            timestamp.textContent = `Last updated: ${date.toLocaleString()}`;
+            timestamp.style.display = 'block';
+        }
+
+        function displayOrdersView(data) {
+            const container = document.getElementById('orders-container');
+            const itemsView = document.getElementById('items-view');
+            const ordersView = document.getElementById('orders-view');
+            const statsBar = document.getElementById('stats-bar');
+            const timestamp = document.getElementById('timestamp');
+            
+            // Show orders view, hide items view
+            itemsView.style.display = 'none';
+            ordersView.style.display = 'block';
+            
+            // Count express orders
+            const expressCount = data.orders.filter(o => o.isExpress).length;
+            
+            // Update stats
+            document.getElementById('total-orders').textContent = data.totalOrders;
+            document.getElementById('unique-items').textContent = '-';
+            document.getElementById('total-items').textContent = 
+                data.orders.reduce((sum, order) => sum + order.itemCount, 0);
+            document.getElementById('express-orders').textContent = expressCount;
+            
+            // Display orders
+            container.innerHTML = data.orders.map(order => `
+                <div class="order-card ${order.isExpress ? 'express' : ''}">
+                    <div class="order-card-header">
+                        <div class="order-info">
+                            <h3>
+                                Order #${order.orderNumber}
+                                ${order.isExpress ? '<span class="express-badge">Express</span>' : ''}
+                            </h3>
+                            <div class="order-meta">
+                                <span class="customer-name">${order.customerName}</span>
+                                <span> • ${order.itemCount} item${order.itemCount !== 1 ? 's' : ''}</span>
+                            </div>
+                        </div>
+                        <div class="order-actions">
+                            <div class="custom-checkbox" onclick="toggleCheckbox(this)"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="order-items-list">
+                        ${order.items.map(item => `
+                            <div class="order-item">
+                                <div class="custom-checkbox" onclick="toggleCheckbox(this)"></div>
+                                <span class="order-item-name">
+                                    ${item.name}
+                                    ${item.isBundle ? '<span class="bundle-indicator">Bundle</span>' : ''}
+                                </span>
+                                <span class="order-item-qty">×${item.quantity}</span>
+                            </div>
+                            ${item.isBundle ? `
+                                <div style="margin-left: 48px; margin-top: -4px;">
+                                    ${item.items.map(bundleItem => `
+                                        <div class="bundle-item">
+                                            <div class="custom-checkbox" onclick="toggleCheckbox(this)"></div>
+                                            <span class="bundle-item-quantity">×${item.quantity}</span>
+                                            <span style="font-size: 13px; color: #6d7175;">${bundleItem}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+                        `).join('')}
+                    </div>
+                    
+                    <div class="shipping-buttons">
+                        <button class="btn btn-sendle" onclick="openSendle()">
+                            📮 Open Sendle
+                        </button>
+                        <button class="btn btn-auspost" onclick="openAusPost()">
+                            📫 Open AusPost EZLabel
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            
+            // Show UI elements
+            statsBar.style.display = 'flex';
+            
+            // Update timestamp
+            const date = new Date(data.generatedAt);
+            timestamp.textContent = `Last updated: ${date.toLocaleString()}`;
+            timestamp.style.display = 'block';
+        }
+
+        function openSendle() {
+            window.open('https://secure.sendle.com/', '_blank');
+        }
+
+        function openAusPost() {
+            window.open('https://admin.shopify.com/store/trueindianspices/apps/auspost-ezlabel', '_blank');
+        }
+
+        // Helper functions
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('items-view').style.display = 'none';
+            document.getElementById('orders-view').style.display = 'none';
+            document.getElementById('empty-state').style.display = 'none';
+            document.getElementById('stats-bar').style.display = 'none';
+            document.getElementById('error-message').style.display = 'none';
+            document.getElementById('timestamp').style.display = 'none';
+            document.getElementById('refresh-btn').disabled = true;
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function showEmptyState() {
+            document.getElementById('empty-state').style.display = 'block';
+        }
+
+        function showError(message) {
+            const errorEl = document.getElementById('error-message');
+            errorEl.className = 'error-banner';
+            errorEl.innerHTML = `<strong>Error:</strong> ${message}`;
+            errorEl.style.display = 'block';
+        }
+
+        function enableRefreshButton() {
+            document.getElementById('refresh-btn').disabled = false;
+        }
+    </script>
+</body>
+</html>
